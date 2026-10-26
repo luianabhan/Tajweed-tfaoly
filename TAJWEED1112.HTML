@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>درس أحكام التجويد التفاعلي</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts (Cairo & Amiri) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- XLSX Library for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+        }
+        .quran-font {
+            font-family: 'Amiri', serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .word-tooltip {
+            position: relative;
+            cursor: pointer;
+            border-bottom: 2px dashed #059669;
+            color: #065f46;
+            font-weight: 700;
+            display: inline-block;
+            padding: 0 4px;
+            transition: all 0.2s;
+        }
+        .word-tooltip:hover {
+            background-color: #d1fae5;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 4px;
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 3s infinite ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <!-- Top Header & Live Student Bar -->
+    <header id="top-bar" class="hidden sticky top-0 z-50 bg-slate-900 text-white shadow-md border-b-4 border-emerald-500 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-lg shadow">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400">الطَّالِبُ / الطَّالِبَةُ:</div>
+                    <div id="bar-student-name" class="font-bold text-emerald-400 text-sm sm:text-base">---</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 text-xs sm:text-sm">
+                    <span class="text-slate-400">الرَّقْمُ المَدْرَسِيُّ: </span>
+                    <span id="bar-student-id" class="font-semibold text-amber-400">---</span>
+                </div>
+                <div class="bg-emerald-950 border border-emerald-600 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-inner">
+                    <i class="fas fa-star text-amber-400 text-lg"></i>
+                    <span class="text-xs text-slate-300">النِّقَاطُ:</span>
+                    <span id="bar-student-score" class="font-extrabold text-amber-400 text-lg">0</span>
+                </div>
+                <button onclick="toggleTeacherPanel()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
+                    <i class="fas fa-user-shield text-emerald-400"></i>
+                    <span>لَوْحَةُ المـُعَلِّمِ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Control Bar -->
+    <div id="nav-bar" class="hidden bg-white border-b border-slate-200 shadow-sm py-2 px-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <button id="btn-back" onclick="goPreviousStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm">
+                <i class="fas fa-arrow-right"></i>
+                <span>الرُّجُوعُ لِلْسَّابِقِ</span>
+            </button>
+            
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <span id="current-step-title" class="text-emerald-700 font-extrabold text-sm sm:text-base">المَحْوَرُ الحالي</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto w-full p-4 sm:p-6 flex-grow">
+
+        <!-- STEP 0: LOGIN SLIDE -->
+        <section id="slide-login" class="block animate-fade-in">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 shadow-2xl max-w-xl mx-auto text-center border-t-8 border-emerald-600 mt-6">
+                <div class="w-24 h-24 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-4xl shadow-inner animate-pulse-subtle">
+                    <i class="fas fa-quran"></i>
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-2">أَحْكَامُ التَّجْوِيدِ الـمُعْتَمَدَةِ</h1>
+                <p class="text-slate-600 mb-6 text-sm sm:text-base font-semibold">دَرْسٌ تَفَاعُلِيٌّ مُمْتِعٌ وَشَامِلٌ وِفْقَ المَنـْهَجِ الـمُدَرَّسِ</p>
+
+                <form onsubmit="startLesson(event)" class="space-y-4 text-right">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">الاسْمُ الثُّلاثِيُّ (إِلْزَامِيّ): <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute right-3 top-3.5 text-slate-400"></i>
+                            <input type="text" id="input-name" required placeholder="أَدْخِلِ اسْمَكَ الثُّلاثِيَّ هُنَا..." class="w-full pr-10 pl-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1 text-sm">الرَّقْمُ المَدْرَسِيُّ ID (إِلْزَامِيّ): <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-id-card absolute right-3 top-3.5 text-slate-400"></i>
+                            <input type="text" id="input-id" required placeholder="أَدْخِلْ رَقْمَكَ المَدْرَسِيَّ..." class="w-full pr-10 pl-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg rounded-xl shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5 mt-6 flex items-center justify-center gap-2">
+                        <span>ابْدَأِ الرِّحْلَةَ التَّعْلِيمِيَّةَ</span>
+                        <i class="fas fa-play"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- STEP 1: LEARNING OUTCOMES -->
+        <section id="slide-outcomes" class="hidden">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 shadow-2xl border-r-8 border-amber-500">
+                <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-200">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">نَوَاتِجُ التَّعَلُّمِ المـُعْتَمَدَةِ</h2>
+                        <p class="text-slate-500 text-sm">مَاذَا سَتَتَعَلَّمُ فِي هَذَا الدَّرْسِ الشَّامِلِ؟</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl mt-1"></i>
+                        <p class="text-slate-700 font-bold text-base leading-relaxed">إِتْقَانُ أحْكَامِ النُّونِ السَّاكِنَةِ وَالتَّنْوِينِ الأَرْبَعَةِ (الإِظْهَار، الإِدْغَام، الإِقْلاب، الإِخْفَاء).</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl mt-1"></i>
+                        <p class="text-slate-700 font-bold text-base leading-relaxed">التَّمْيِيزُ الدَّقِيقُ بَيْنَ النُّونِ السَّاكِنَةِ وَالتَّنْوِينِ وَأَحْكَامِ المِيمِ السَّاكِنَةِ وَالمُشَدَّدَتَيْنِ.</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl mt-1"></i>
+                        <p class="text-slate-700 font-bold text-base leading-relaxed">مَعْرِفَةُ حَالاتِ تَفْخِيمِ وَتَرْقِيقِ الرَّاءِ (8 تَفْخِيم، 4 تَرْقِيق، 2 جَوَاز الوَجْهَيْنِ).</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3">
+                        <i class="fas fa-check-circle text-emerald-600 text-xl mt-1"></i>
+                        <p class="text-slate-700 font-bold text-base leading-relaxed">فَهْمُ أحْكَامِ لامِ لَفْظِ الجَلالَةِ والأَلِفِ وَشَجَرَةِ الـمُدُودِ الأَصْلِيَّةِ وَالفَرْعِيَّةِ.</p>
+                    </div>
+                </div>
+
+                <button onclick="nextStep()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <span>الاِنْتِقَالُ إِلَى التَّهْيِئَةِ وَالتَّمْهِيدِ</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- STEP 2: MOTIVATIONAL WARM-UP -->
+        <section id="slide-warmup" class="hidden">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 shadow-2xl border-r-8 border-purple-600">
+                <div class="flex items-center gap-4 mb-6 pb-4 border-b border-slate-200">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">تَهْيِئَةٌ حَافِزَةٌ وَتَمْهِيدٌ</h2>
+                        <p class="text-slate-500 text-sm">مَدْخَلٌ إِلَى عِلْمِ التَّجْوِيدِ وَأَحْكَامِ التِّلاوَةِ</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6 mb-6">
+                    <h3 class="text-xl font-bold text-purple-900 mb-3 flex items-center gap-2">
+                        <i class="fas fa-book-open text-purple-600"></i>
+                        <span>قَوَاعِدُ تِرْتِيلِ كِتَابِ اللَّهِ</span>
+                    </h3>
+                    <p class="text-slate-700 text-base sm:text-lg leading-relaxed mb-4">
+                        قَالَ اللَّهُ تَعَالَى: <span class="quran-font text-emerald-700 font-bold text-xl">﴿وَرَتِّلِ الْقُرْآنَ تَرْتِيلًا﴾</span>.
+                        يَقُومُ هَذَا الدَّرْسُ عَلَى المَنـْهَجِ الـمُعْتَمَدِ فِي المـُذَكَّرَةِ، وَيَشْمَلُ جَمِيعَ القَوَاعِدِ، الأَمْثِلَةِ، وَالأَسْئِلَةِ التَّفاعُلِيَّةِ.
+                    </p>
+                    <div class="p-4 bg-white rounded-xl border border-purple-200 shadow-sm text-purple-800 font-semibold text-sm">
+                        💡 <strong>تَنَبَّهْ:</strong> اضْغَطْ عَلَى الـكَلِمَاتِ المـُظَلَّلَةِ بِخَطٍّ مُنَقَّطٍ لِعَرْضِ الشَّرْحِ الاصْطِلاحِيِّ والتَّوْضِيحَاتِ!
+                    </div>
+                </div>
+
+                <button onclick="nextStep()" class="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <span>ابْدَأِ المَحَاوِرَ التَّعْلِيمِيَّةَ</span>
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- DYNAMIC AXIS VIEW CONTAINER -->
+        <section id="slide-axis" class="hidden">
+            <div id="axis-banner" class="rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-6 transition-all duration-300">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <span id="axis-badge" class="bg-white/20 px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase">المَحْوَرُ 1 مِنْ 5</span>
+                        <h2 id="axis-title" class="text-2xl sm:text-3xl font-extrabold mt-2">عُنْوَانُ المَحْوَرِ</h2>
+                        <p id="axis-brief" class="text-white/90 text-sm sm:text-base mt-1">الشَّرْحُ المَوْجَزُ لِلْمَحْوَرِ...</p>
+                    </div>
+                    <div id="axis-icon-container" class="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center text-4xl shadow-inner">
+                        <i id="axis-icon" class="fas fa-star"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Cards -->
+            <div id="axis-content" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 mb-8 space-y-6">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Start Axis Quiz Button -->
+            <div class="mt-6">
+                <button id="btn-start-axis-quiz" onclick="startAxisQuiz()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xl rounded-2xl shadow-xl transition flex items-center justify-center gap-3">
+                    <i class="fas fa-gamepad text-amber-300 text-2xl"></i>
+                    <span>تَحَدَّ نَفْسَكَ فِي أَسْئِلَةِ هَذَا المَحْوَرِ (5 أَسْئِلَةٍ)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- DYNAMIC AXIS QUIZ CONTAINER -->
+        <section id="slide-quiz" class="hidden">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border-t-8 border-amber-500">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="quiz-question-num" class="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">السُّؤَالُ 1 مِنْ 5</span>
+                    <span id="quiz-axis-tag" class="text-xs font-bold text-slate-500">اسم المحور</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 mb-6">
+                    <div id="quiz-progress-fill" class="bg-amber-500 h-2.5 rounded-full transition-all duration-300" style="width: 20%"></div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-6">
+                    <h3 id="quiz-question-text" class="text-lg sm:text-xl font-extrabold text-slate-800 leading-relaxed text-right">
+                        نَصُّ السُّؤَالِ هُنَا...
+                    </h3>
+                </div>
+
+                <div id="quiz-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Dynamic options -->
+                </div>
+
+                <div id="quiz-feedback" class="hidden rounded-2xl p-4 text-sm font-semibold transition-all">
+                    <!-- Feedback -->
+                </div>
+
+                <button id="btn-next-question" onclick="submitNextQuestion()" class="hidden w-full mt-4 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <span>السُّؤَالُ التَّالِي</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- FINAL CERTIFICATE SLIDE -->
+        <section id="slide-certificate" class="hidden">
+            <div class="bg-white border-8 border-amber-500 rounded-3xl p-6 sm:p-10 shadow-2xl text-center relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-100 rounded-full opacity-50"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-100 rounded-full opacity-50"></div>
+
+                <div class="relative z-10">
+                    <div class="w-20 h-20 bg-amber-500 text-white rounded-full flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg animate-bounce">
+                        <i class="fas fa-award"></i>
+                    </div>
+
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-amber-600 mb-1 font-amiri">شَهَادَةُ إِتْقَانِ أحْكَامِ التَّجْوِيدِ</h2>
+                    <p class="text-slate-500 text-sm mb-6">يَسُرُّ مَرْكَزَ التَّعْلِيمِ التَّفَاعُلِيِّ مَنْحَ هَذِهِ الشَّهَادَةِ لِلْمُتَمَيِّزِ/ةِ</p>
+
+                    <div class="py-4 border-y-2 border-dashed border-amber-300 my-4 bg-amber-50/50 rounded-2xl">
+                        <h3 id="cert-student-name" class="text-2xl sm:text-3xl font-extrabold text-emerald-800 font-amiri">---</h3>
+                        <p class="text-slate-600 font-semibold text-sm mt-1">الرَّقْمُ المَدْرَسِيُّ: <span id="cert-student-id" class="text-slate-800">---</span></p>
+                    </div>
+
+                    <p class="text-slate-700 font-bold text-base sm:text-lg mb-4">
+                        لِإِتْمَامِهِ/هَا جَمِيعَ مَحَاوِرِ دَرْسِ أحْكَامِ التَّجْوِيدِ الـمُعْتَمَدَةِ وَالإِجَابَةِ عَنْ كَافَّةِ الأَسْئِلَةِ بِنَجَاحٍ.
+                    </p>
+
+                    <div class="inline-block bg-emerald-900 text-white px-8 py-4 rounded-2xl shadow-xl my-4">
+                        <div class="text-xs text-emerald-300 font-bold">النَّتِيجَةُ النِّهَائِيَّةُ:</div>
+                        <div id="cert-score-percent" class="text-4xl sm:text-5xl font-extrabold text-amber-400 font-mono mt-1">100%</div>
+                    </div>
+
+                    <div id="cert-feedback-text" class="text-emerald-700 font-bold text-sm sm:text-base mb-6">
+                        مُنْتَازٌ جِدّاً! لَقَدْ حَقَّقْتَ أَعْلَى الدَّرَجَاتِ فِي هَذِهِ الرِّحْلَةِ الإِيمَانِيَّةِ.
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-blue-900 text-sm font-bold text-right mb-6 flex items-center gap-3">
+                        <i class="fas fa-camera text-blue-600 text-2xl"></i>
+                        <span>تَنـْبِيهٌ هامّ: يُرْجَى تَصْوِيرُ هَذِهِ الشَّهَادَةِ (سْكِرِينْ شُوتْ) وَرَفْعُهَا إلَى فَرِيقِ TEAMS فِي المَكَانِ الَّذِي حَدَّدَهُ المُعَلِّمُ.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Word Meaning Modal -->
+    <div id="modal-word" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-t-8 border-emerald-600 text-center animate-fade-in">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mx-auto mb-3">
+                <i class="fas fa-book"></i>
+            </div>
+            <h3 id="modal-word-title" class="text-2xl font-extrabold text-slate-800 mb-2 font-amiri">الكلمة</h3>
+            <p id="modal-word-desc" class="text-slate-600 text-base leading-relaxed mb-6 font-semibold">المعنى هنا...</p>
+            <button onclick="closeWordModal()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition">
+                حَسَنًا، فَهِمْتُ
+            </button>
+        </div>
+    </div>
+
+    <!-- Teacher Dashboard Modal -->
+    <div id="modal-teacher" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border-t-8 border-slate-800 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-slate-800 text-amber-400 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-800">لَوْحَةُ تَحَكُّمِ المـُعَلِّمِ (سِجِلُّ الطُّلاَّبِ)</h3>
+                        <p class="text-xs text-slate-500">تَسْتَوْعِبُ حَتَّى 150 طَالِباً مَعَ التَّحْدِيثِ التِلْقَائِيِّ</p>
+                    </div>
+                </div>
+                <button onclick="toggleTeacherPanel()" class="text-slate-400 hover:text-slate-600 text-2xl font-bold">&times;</button>
+            </div>
+
+            <div class="py-4 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center gap-4 text-sm font-bold">
+                    <span class="bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg">
+                        عَدَدُ المـُشَارِكِينَ: <span id="dash-count" class="text-base font-extrabold">0</span>
+                    </span>
+                </div>
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-4 py-2 rounded-xl shadow transition flex items-center gap-2 text-sm">
+                    <i class="fas fa-file-excel text-lg"></i>
+                    <span>تَحْمِيلُ السِّجِلِّ عَلَى EXCEL</span>
+                </button>
+            </div>
+
+            <div class="overflow-y-auto flex-grow border border-slate-200 rounded-2xl">
+                <table class="w-full text-right border-collapse">
+                    <thead class="bg-slate-800 text-white text-xs font-bold sticky top-0">
+                        <tr>
+                            <th class="p-3">#</th>
+                            <th class="p-3">اسْمُ الطَّالِبِ</th>
+                            <th class="p-3">الرَّقْمُ المَدْرَسِيُّ</th>
+                            <th class="p-3">النِّقَاطُ المَكْتَسَبَةُ</th>
+                            <th class="p-3">النِّسْبَةُ المِئَوِيَّةُ</th>
+                            <th class="p-3">تَارِيخُ الإِكْمَالِ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dash-table-body" class="text-sm font-semibold text-slate-700 divide-y divide-slate-100">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-center py-4 text-xs font-semibold mt-auto border-t border-slate-800">
+        <p>مَرْكَزُ إِقْرَاءِ وَتَحْفِيظِ القُرْآنِ الكَرِيمِ - دَرْسُ أحْكَامِ التَّجْوِيدِ الـمُعْتَمَدِ © 2026</p>
+    </footer>
+
+    <!-- Audio FX & Data -->
+    <script>
+        const AudioFX = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            playCorrect() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.35);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } catch(e){}
+            },
+            playWrong() {
+                try {
+                    this.init();
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(180, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } catch(e){}
+            }
+        };
+
+        let student = {
+            name: '',
+            id: '',
+            score: 0,
+            currentStepIndex: 0,
+            axisAnswers: {}
+        };
+
+        let studentsLog = JSON.parse(localStorage.getItem('tajweed_students_log') || '[]');
+
+        const AXES_DATA = [
+            {
+                id: 1,
+                title: "المَحْوَرُ الأَوَّلُ: أحْكَامُ النُّونِ السَّاكِنَةِ وَالتَّنْوِينِ (١)",
+                badgeColor: "bg-emerald-600",
+                icon: "fa-book-quran",
+                brief: "يَشْمَلُ الإِظْهَارَ، الإِدْغَامَ، الإِقْلابَ، الإِخْفَاءَ، وَتَعْرِيفَ التَّنْوِينِ مَعَ الـمُقَارَنَةِ مَعَ النُّونِ السَّاكِنَةِ.",
+                details: [
+                    {
+                        subtitle: "1. أحْكَامُ النُّونِ السَّاكِنَةِ وَالتَّنْوِينِ الأَرْبَعَةُ",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                <div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200">
+                                    <h5 class="font-extrabold text-emerald-900 text-sm">1. الإِظْهَارُ (لُغَةً: الْبَيَانُ)</h5>
+                                    <p class="mt-1 text-slate-700"><strong>اصْطِلاحاً:</strong> إِخْرَاجُ كُلِّ حَرْفٍ مِنْ مَخْرَجِهِ مِنْ غَيْرِ زِيَادَةٍ فِي الْغُنَّةِ.</p>
+                                    <p class="mt-1 text-emerald-800"><strong>حُرُوفُهُ (6):</strong> (ء - هـ - ع - ح - غ - خ) فِي «أَخِي هَاكَ عِلْماً حَازَهُ غَيْرُ خَاسِرٍ».</p>
+                                    <p class="mt-1 text-slate-600 font-semibold">أَمْثِلَةٌ: يَنْأَوْنَ، مِنْ عِلْمٍ، كُلٌّ آمَنَ، حَكِيمٌ حَمِيدٌ.</p>
+                                </div>
+                                <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200">
+                                    <h5 class="font-extrabold text-blue-900 text-sm">2. الإِدْغَامُ (لُغَةً: الإِدْخَالُ)</h5>
+                                    <p class="mt-1 text-slate-700"><strong>اصْطِلاحاً:</strong> إِيصَالُ حَرْفٍ سَاكِنٍ بِحَرْفٍ مُتَحَرِّكٍ بِحَيْثُ يَصِيرَانِ حَرْفاً وَاحِداً مُشَدَّداً مِنْ جِنْسِ الثَّانِي.</p>
+                                    <p class="mt-1 text-blue-800"><strong>حُرُوفُهُ (6):</strong> (ي - ر - م - ل - و - ن) فِي «يَرْمَلُونَ».</p>
+                                    <p class="mt-1 text-slate-600 font-semibold">• بغُنَّة (يَنْمُو): مَنْ يَقُولُ، خَيْرٌ يَرَهُ. <br>• بغير غُنَّة (ل، ر): مِنْ لَدُنْهُ، غَفُورٌ رَحِيمٌ.</p>
+                                </div>
+                                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200">
+                                    <h5 class="font-extrabold text-amber-900 text-sm">3. الإِقْلابُ (لُغَةً: تَحْوِيلُ الشَّيْءِ عَنْ وَجْهِهِ)</h5>
+                                    <p class="mt-1 text-slate-700"><strong>اصْطِلاحاً:</strong> قَلْبُ النُّونِ السَّاكِنَةِ أَوْ التَّنْوِينِ عِنْدَ البَاءِ مِيماً مُخْفَاةً مَعَ بَقَاءِ الغُنَّةِ.</p>
+                                    <p class="mt-1 text-amber-800"><strong>حَرْفُهُ (1):</strong> (البَاء - ب).</p>
+                                    <p class="mt-1 text-slate-600 font-semibold">أَمْثِلَةٌ: مِنْ بَعْدِ (مِمْبَعْدِ)، أَنْبِئْهُمْ (أَمْبِئْهُمْ)، سَمِيعٌ بَصِيرٌ.</p>
+                                </div>
+                                <div class="bg-purple-50 p-3.5 rounded-xl border border-purple-200">
+                                    <h5 class="font-extrabold text-purple-900 text-sm">4. الإِخْفَاءُ (لُغَةً: السَّتْرُ)</h5>
+                                    <p class="mt-1 text-slate-700"><strong>اصْطِلاحاً:</strong> نُطْقُ الحَرْفِ بِصِفَةٍ بَيْنَ الإِظْهَارِ وَالإِدْغَامِ عِارٍ عَنِ التَّشْدِيدِ مَعَ بَقَاءِ الغُنَّةِ.</p>
+                                    <p class="mt-1 text-purple-800"><strong>حُرُوفُهُ (15):</strong> ص - ذ - ث - ك - ج - ش - ق - س - د - ط - ز - ف - ت - ض - ظ.</p>
+                                    <p class="mt-1 text-slate-600 font-semibold">«صِفْ ذَا ثَنَا كَمْ جَادَ شَخْصٌ قَدْ سَمَا...»</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "2. اسْتِثْنَاءٌ هَامٌّ وَتَعْرِيفُ التَّنْوِينِ",
+                        content: `
+                            <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-xs sm:text-sm space-y-2">
+                                <p class="text-red-900 font-extrabold">🚨 اسْتِثْنَاءُ الإِدْغَامِ (الإِظْهَارُ الـمُطْلَقُ):</p>
+                                <p class="text-slate-700">لا تُدْغَمُ النُّونُ السَّاكِنَةُ فِي الواوِ أو الياءِ إذا اجْتَمَعَا فِي كَلِمَةٍ واحِدَةٍ، وَذَلِكَ فِي 4 كَلِمَاتٍ فَقَطْ فِي القُرْآنِ: <strong class="text-red-700 text-base">«قِنْوَانٌ ، صِنْوَانٌ ، الدُّنْيَا ، بُنْيَانٌ»</strong>.</p>
+                            </div>
+                            <div class="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm">
+                                <p><strong class="text-emerald-800">التَّنْوِينُ:</strong> هُوَ نُونٌ سَاكِنَةٌ تَلْحَقُهَا العَرَبُ آخِرَ الأَسْمَاءِ لَفْظاً لا خَطّاً وَوَصْلاً لا وَقْفاً، وَعَلامَتُهُ فِي الخَطِّ مُضَاعَفَةُ الحَرَكَةِ.</p>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "3. الـفَرْقُ بَيْنَ النُّونِ السَّاكِنَةِ وَالتَّنْوِينِ",
+                        content: `
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs sm:text-sm text-right border-collapse border border-slate-200 mt-2">
+                                    <thead class="bg-emerald-800 text-white">
+                                        <tr>
+                                            <th class="p-2 border border-emerald-700">الوجه</th>
+                                            <th class="p-2 border border-emerald-700">الـنُّونُ السَّاكِنَةُ</th>
+                                            <th class="p-2 border border-emerald-700">التَّنْوِينُ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 font-semibold text-slate-700">
+                                        <tr>
+                                            <td class="p-2 bg-slate-50 border border-slate-200">المكان</td>
+                                            <td class="p-2 border border-slate-200">تَأْتِي فِي وَسَطِ الكَلِمَةِ أَوْ فِي نِهَايَتِهَا</td>
+                                            <td class="p-2 border border-slate-200">يَأْتِي فِي نِهَايَةِ الكَلِمَةِ فَقَطْ</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 bg-slate-50 border border-slate-200">نوع الكلمة</td>
+                                            <td class="p-2 border border-slate-200">تَكُونُ فِي الأَفْعَالِ وَالحُرُوفِ وَالأَسْمَاءِ</td>
+                                            <td class="p-2 border border-slate-200">يَلْحَقُ فِي الأَسْمَاءِ فَقَطْ</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-2 bg-slate-50 border border-slate-200">الثبوت</td>
+                                            <td class="p-2 border border-slate-200">تَثْبُتُ لَفْظاً وَخَطّاً وَوَصْلاً وَوَقْفاً</td>
+                                            <td class="p-2 border border-slate-200">يَثْبُتُ لَفْظاً وَوَصْلاً وَيَسْقُطُ وَقْفاً وَخَطّاً</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `
+                    }
+                ],
+                questions: [
+                    {
+                        q: "ما هُوَ التَّعْرِيفُ الاصْطِلاحِيُّ لِلْإِظْهَارِ الحَلْقِيِّ؟",
+                        options: [
+                            "إِخْرَاجُ كُلِّ حَرْفٍ مِنْ مَخْرَجِهِ مِنْ غَيْرِ زِيَادَةٍ فِي الْغُنَّةِ",
+                            "إِدْخَالُ حَرْفٍ سَاكِنٍ فِي حَرْفٍ مُتَحَرِّكٍ",
+                            "قَلْبُ النُّونِ السَّاكِنَةِ مِيماً مخفاة",
+                            "نُطْقُ الحَرْفِ بِصِفَةٍ بَيْنَ الإِظْهَارِ وَالإِدْغَامِ"
+                        ],
+                        correct: 0,
+                        hint: "الإظهار لغة البيان واصطلاحاً إخراج كل حرف من مخرجه من غير زيادة في الغنة."
+                    },
+                    {
+                        q: "تُدْغَمُ النُّونُ السَّاكِنَةُ بِغَيْرِ غُنَّةٍ فِي حَرْفَيْنِ هُمَا:",
+                        options: ["اللام والراء (ل ، ر)", "الياء والواو (ي ، و)", "الميم والنون (م ، ن)", "الباء والتاء (ب ، ت)"],
+                        correct: 0,
+                        hint: "الإدغام بغير غنة يكون في حرفي (ل، ر) مثل: من لدنه، غفور رحيم."
+                    },
+                    {
+                        q: "لِمَاذَا لا تُدْغَمُ النُّونُ السَّاكِنَةُ فِي كَلِمَةِ (الدُّنْيَا)؟",
+                        options: [
+                            "لِأَنَّ النُّونِ وَالْيَاءَ اجْتَمَعَا فِي كَلِمَةٍ وَاحِدَةٍ (إِظْهَارٌ مُطْلَقٌ)",
+                            "لِأَنَّ الْيَاءَ مِنْ حُرُوفِ الإِظْهَارِ الحَلْقِيِّ",
+                            "لِأَنَّهَا اسْمٌ مَجْرُورٌ",
+                            "لِأَنَّ النُّونِ مَفْتُوحَةٌ"
+                        ],
+                        correct: 0,
+                        hint: "تذكر الكلمات الأربع: قنوان، صنوان، الدنيا، بنيان لا تدغم فيها النون."
+                    },
+                    {
+                        q: "حُكْمُ النُّونِ السَّاكِنَةِ فِي (أَنْبِئْهُمْ) هُوَ الإِقْلابُ، وَتُقْلَبُ النُّونُ إِلى:",
+                        options: ["مِيمٍ مُخْفَاةٍ مَعَ بَقَاءِ الغُنَّةِ", "نُونٍ مُشَدَّدَةٍ", "لامٍ مُظْهَرَةٍ", "واوٍ مَادَّةٍ"],
+                        correct: 0,
+                        hint: "الإقلاب هو قلب النون أو التنوين ميماً مخفاة عند الباء."
+                    },
+                    {
+                        q: "أَيٌّ مِنَ الْخَصَائِصِ التَّالِيَةِ تُعْتَبَرُ خَاصَّةً بِالتَّنْوِينِ دُونَ النُّونِ السَّاكِنَةِ؟",
+                        options: [
+                            "يَلْحَقُ فِي الأَسْمَاءِ فَقَطْ وَيَثْبُتُ لَفْظاً وَوَصْلاً وَيَسْقُطُ وَقْفاً وَخَطّاً",
+                            "يَكُونُ فِي الأَفْعَالِ وَالحُرُوفِ وَالأَسْمَاءِ",
+                            "يَأْتِي فِي وَسَطِ الكَلِمَةِ وَنِهَايَتِهَا",
+                            "يَثْبُتُ خَطّاً وَوَقْفاً"
+                        ],
+                        correct: 0,
+                        hint: "التنوين يلحق آخر الأسماء فقط ويسقط في الوقف والخط."
+                    }
+                ]
+            },
+
+            {
+                id: 2,
+                title: "المَحْوَرُ الثَّانِي: أحْكَامُ المِيمِ السَّاكِنَةِ وَالنُّونِ وَالمِيمِ المـُشَدَّدَتَيْنِ (٢)",
+                badgeColor: "bg-blue-600",
+                icon: "fa-layer-group",
+                brief: "يَشْمَلُ الإِدْغَامَ الـمُتَمَاثِلَ، الإِخْفَاءَ الشَّفَوِيَّ، الإِظْهَارَ الشَّفَوِيَّ، وَحُكْمَ النُّونِ وَالمِيمِ المـُشَدَّدَتَيْنِ.",
+                details: [
+                    {
+                        subtitle: "1. أحْكَامُ المِيمِ السَّاكِنَةِ الثَّلاثَةُ",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs sm:text-sm">
+                                <div class="bg-blue-50 p-3.5 rounded-xl border border-blue-200">
+                                    <h5 class="font-extrabold text-blue-900 text-sm">1. الإِدْغَامُ (تُدْغَمُ فِي مِثْلِهَا)</h5>
+                                    <p class="mt-1 text-slate-700">تُدْغَمُ المِيمُ السَّاكِنَةُ إِذَا أَتَى بَعْدَهَا حرف <strong>(المِيم - م)</strong> مَعَ تَطْوِيلِ الغُنَّةِ أَكْمَلَ مَا تَكُونُ.</p>
+                                    <p class="mt-1 text-blue-800 font-bold">مِثَال: «لَهُم مَّا يَشَاءُونَ».</p>
+                                </div>
+                                <div class="bg-purple-50 p-3.5 rounded-xl border border-purple-200">
+                                    <h5 class="font-extrabold text-purple-900 text-sm">2. الإِخْفَاءُ الشَّفَوِيُّ</h5>
+                                    <p class="mt-1 text-slate-700">تُخْفَى المِيمُ السَّاكِنَةُ بِغُنَّةٍ إِذَا أَتَى بَعْدَهَا حرف <strong>(البَاء - ب)</strong>.</p>
+                                    <p class="mt-1 text-purple-800 font-bold">مِثَال: «تَرْمِيهِم بِحِجَارَةٍ» ، «وَمَا هُم بِمُؤْمِنِينَ».</p>
+                                </div>
+                                <div class="bg-emerald-50 p-3.5 rounded-xl border border-emerald-200">
+                                    <h5 class="font-extrabold text-emerald-900 text-sm">3. الإِظْهَارُ الشَّفَوِيُّ</h5>
+                                    <p class="mt-1 text-slate-700">تُظْهَرُ المِيمُ السَّاكِنَةُ إِذَا أَتَى بَعْدَهَا جَمِيعُ حُرُوفِ الهِجَاءِ إِلاَّ (المِيم وَالبَاء).</p>
+                                    <p class="mt-1 text-emerald-800 font-bold">مِثَال: «لَهُمْ فِيهَا» ، «أَنْذَرْتَهُمْ أَمْ لَمْ تُنْذِرْهُمْ لا يُؤْمِنُونَ».</p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "2. حُكْمُ النُّونِ وَالمِيمِ المـُشَدَّدَتَيْنِ",
+                        content: `
+                            <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs sm:text-sm">
+                                <h5 class="font-extrabold text-amber-900 text-base mb-1">💡 القَاعِدَةُ الذهبية:</h5>
+                                <p class="text-slate-800 font-bold leading-relaxed">
+                                    يَجِبُ عَلَى القَارِئِ عِنْدَ النُّطْقِ بِنُونٍ أَوْ مِيمٍ مُشَدَّدَتَيْنِ <span class="text-amber-800 font-black underline">تَطْوِيلُ الغُنَّةِ فِيهِمَا أَكْمَلَ مَا تَكُونُ وَصْلاً وَوَقْفاً (بِمِقْدَارِ حَرَكَتَيْنِ)</span>.
+                                </p>
+                                <div class="mt-2 text-slate-700 font-semibold">
+                                    أَمْثِلَةٌ: «مِنَ الْجِنَّةِ وَالنَّاسِ» ، «حَمَّالَةَ الْحَطَبِ» ، «إِنَّ» ، «ثُمَّ».
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
+                questions: [
+                    {
+                        q: "تُدْغَمُ المِيمُ السَّاكِنَةُ (إِدْغَامَ مُتَمَاثِلِينَ) إِذَا أَتَى بَعْدَهَا حَرْفُ:",
+                        options: ["المِيم (م)", "البَاء (ب)", "النُّون (ن)", "الوَاو (و)"],
+                        correct: 0,
+                        hint: "تدغم الميم الساكنة في مثلها (الميم فقط) نحو: (لهم ما)."
+                    },
+                    {
+                        q: "حُكْمُ المِيمِ السَّاكِنَةِ فِي قَوْلِهِ تَعَالَى: (تَرْمِيهِم بِحِجَارَةٍ) هُوَ:",
+                        options: ["إِخْفَاءٌ شَفَوِيٌّ", "إِظْهَارٌ شَفَوِيٌّ", "إِدْغَامٌ شَفَوِيٌّ", "إِقْلابٌ"],
+                        correct: 0,
+                        hint: "تخفى الميم الساكنة بغنة إذا أتى بعدها حرف الباء."
+                    },
+                    {
+                        q: "تُظْهَرُ المِيمُ السَّاكِنَةُ إِظْهَاراً شَفَوِيّاً عِنْدَ جَمِيعِ الحُرُوفِ مَا عَدَا:",
+                        options: ["المِيمَ وَالبَاءَ", "الوَاوَ وَالفَاءَ", "الأَلِفَ وَالْيَاءَ", "النُّونِ وَالرَّاءِ"],
+                        correct: 0,
+                        hint: "الإظهار الشفوي ينطبق على جميع الحروف الهجائية باستثناء الميم والباء."
+                    },
+                    {
+                        q: "مَا مِقْدَارُ الغُنَّةِ الْوَاجِبَةِ عِنْدَ النُّطْقِ بِالنُّونِ أَوْ المِيمِ المـُشَدَّدَتَيْنِ؟",
+                        options: [
+                            "تَطْوِيلُ الغُنَّةِ أَكْمَلَ مَا تَكُونُ وَصْلاً وَوَقْفاً بِمِقْدَارِ حَرَكَتَيْنِ",
+                            "حَرَكَةٌ وَاحِدَةٌ عِنْدَ الْوَصْلِ فَقَطْ",
+                            "4 حَرَكَاتٍ",
+                            "لا يُشْتَرِطُ فِيهِمَا غُنَّةٌ"
+                        ],
+                        correct: 0,
+                        hint: "تطول الغنة فيهما أكمل ما تكون وصلاً ووقفاً بمقدار حركتين."
+                    },
+                    {
+                        q: "فِي قَوْلِهِ تَعَالَى: (لَهُمْ فِيهَا)، حُكْمُ المِيمِ السَّاكِنَةِ هُوَ الإِظْهَارُ الشَّفَوِيُّ، وَيَجِبُ الحَذَرُ كَثِيراً عِنْدَ مَجِيءِ أَيِّ حَرْفَيْنِ بَعْدَهَا؟",
+                        options: ["الوَاو وَالفَاء (و ، ف)", "الكَاف وَالقَاف", "الرَّاء وَاللام", "الجِيم وَالحَاء"],
+                        correct: 0,
+                        hint: "يحذر القارئ من إخفاء الميم عند الواو والفاء لقرب المخرج والاتحاد."
+                    }
+                ]
+            },
+
+            {
+                id: 3,
+                title: "المَحْوَرُ الثَّالِثُ: أحْكَامُ الرَّاءِ (التَّفْخِيمُ، التَّرْقِيقُ، وَجَوَازُ الوَجْهَيْنِ) (٣)",
+                badgeColor: "bg-purple-600",
+                icon: "fa-wave-square",
+                brief: "يَشْمَلُ حالاتِ تفخيمِ الراء الـ 8، حالاتِ ترقيقها الـ 4، وحالتي جوازِ الوجهينِ بدقة متناهية.",
+                details: [
+                    {
+                        subtitle: "1. حَالاتُ تَفْخِيمِ الرَّاءِ (8 حَالاتٍ)",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">1. إِذَا كَانَتْ مَفْتُوحَةً: «رَمَضَان»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">2. إِذَا كَانَتْ سَاكِنَةً وَقَبْلَهَا مَفْتُوحٌ: «مَرْيَم»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">3. سَاكِنَة وقَبْلَهَا سَاكِن غير ياء وقبله مفتوح: «وَالْعَصْر»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">4. إِذَا كَانَتْ مَضْمُومَةً: «كَفَرُوا»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">5. إِذَا كَانَتْ سَاكِنَةً وَقَبْلَهَا مَضْمُومٌ: «الْقُرْآن»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">6. سَاكِنَة وقَبْلَهَا سَاكِن غير ياء وقبله مضموم: «خُسْر»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200">7. سَاكِنَة وقَبْلَهَا كَسْرَةٌ عَارِضَةٌ ملفوظة أو مقدرة: «ارْجِعُوا» ، «الَّذِي ارْتَضَى»</div>
+                                <div class="p-2.5 bg-purple-50 rounded-xl border border-purple-200 col-span-1 md:col-span-2">8. سَاكِنَة وقَبْلَهَا مَكْسُورٌ وَبَعْدَهَا حَرْفُ اسْتِعْلاءٍ غَيْرِ مَكْسُورٍ فِي الكَلِمَةِ نَفْسِهَا: «إِرْصَاداً» ، «قِرْطَاس» ، «فِرْقَة»</div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "2. حَالاتُ تَرْقِيقِ الرَّاءِ (4 حَالاتٍ)",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs sm:text-sm">
+                                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200">1. إِذَا كَانَتْ مَكْسُورَةً: «كَرِيم» ، «رِيح»</div>
+                                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200">2. إِذَا كَانَتْ سَاكِنَةً وَقَبْلَهَا كَسْرَةٌ أَصْلِيَّةٌ وَلَيْسَ بَعْدَهَا حَرْفُ اسْتِعْلاءٍ: «فِرْعَوْن»</div>
+                                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200">3. سَاكِنَة وقَبْلَهَا سَاكِن غير مستعلٍ وقبله مكسور: «حِجْر» ، «قَدِير»</div>
+                                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200">4. إِذَا كَانَتْ سَاكِنَةً وَسُبِقَتْ بِيَاءِ لِينٍ: «لا ضَيْرَ»</div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "3. جَوَازُ الوَجْهَيْنِ فِي الرَّاءِ (حَالَتَانِ)",
+                        content: `
+                            <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-xs sm:text-sm space-y-3">
+                                <div>
+                                    <strong class="text-amber-900 font-extrabold">الحَالَةُ 1 («فِرْقٍ»):</strong>
+                                    <p class="text-slate-700">إِذَا كَانَتِ الرَّاءُ سَاكِنَةً وَقَبْلَهَا مَكْسُورٌ وَبَعْدَهَا حَرْفُ اسْتِعْلاءٍ مَكْسُورٌ فِي «فِرْقٍ كَالطَّوْدِ» (حَالَةَ الوَصْلِ أو الوقف بالروم). أَمَّا عِنْدَ الوقفِ بِالسُّكُونِ فَتُفَخَّمُ لا غَيْرُ.</p>
+                                </div>
+                                <hr class="border-amber-200">
+                                <div>
+                                    <strong class="text-amber-900 font-extrabold">الحَالَةُ 2 («مِصْرَ» / «الْقِطْرِ»):</strong>
+                                    <p class="text-slate-700">إِذَا كَانَتِ الرَّاءُ سَاكِنَةً وقَبْلَهَا حَرْفُ اسْتِعْلاءٍ سَاكِنٌ وقَبْلَهُ مَكْسُورٌ عِنْدَ الوقفِ بِالسُّكُونِ. <span class="text-emerald-800 font-bold">وَاخْتَارَ الإِمَامُ ابْنُ الجَزَرِيِّ التَّفْخِيمَ فِي (مِصْرَ) وَالتَّرْقِيقَ فِي (الْقِطْرِ) مُرَاعَاةً لِلْوَقْفِ.</span> (أَمَّا فِي الوَصْلِ: مِصْرَ مُفَخَّمَةٌ لأَنَّهَا مَفْتُوحَة، وَالقِطْرِ مُرَقَّقَةٌ لأَنَّهَا مَكْسُورَة).</p>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
+                questions: [
+                    {
+                        q: "تُفَخَّمُ الرَّاءُ إِذَا كَانَتْ سَاكِنَةً وقَبْلَهَا مَكْسُورٌ وَبَعْدَهَا حَرْفُ اسْتِعْلاءٍ غَيْرِ مَكْسُورٍ فِي كَلِمَةٍ وَاحِدَةٍ مِثْلُ:",
+                        options: ["قِرْطَاس وَإِرْصَاداً", "فِرْعَوْن وَحِجْر", "كَرِيم وَرِيح", "مِصْرَ وَالْقِطْرِ"],
+                        correct: 0,
+                        hint: "تذكر قوله تعالى: قرطاس، إرصاداً، فرقة تفخم فيها الراء."
+                    },
+                    {
+                        q: "حُكْمُ الرَّاءِ فِي كَلِمَةِ (فِرْعَوْنَ) هُوَ:",
+                        options: ["التَّرْقِيقُ", "التَّفْخِيمُ", "جَوَازُ الوَجْهَيْنِ", "الإِدْغَامُ"],
+                        correct: 0,
+                        hint: "الراء ساكنة وقبلها كسرة أصلية وليس بعدها حرف استعلاء فترقق."
+                    },
+                    {
+                        q: "تُرَقَّقُ الرَّاءُ إِذَا كَانَتْ سَاكِنَةً وَسُبِقَتْ بِـ:",
+                        options: ["يَاءِ لِينٍ (نَحْوُ: لا ضَيْرَ)", "حَرْفٍ مَضْمُومٍ", "أَلِفِ المَدِّ", "حَرْفِ اسْتِعْلاءٍ مَفْتُوحٍ"],
+                        correct: 0,
+                        hint: "تذكر مثال: لا ضير، الراء سبقت بياء لين فترقق."
+                    },
+                    {
+                        q: "مَاذَا اِخْتَارَ الإِمَامُ ابْنُ الجَزَرِيِّ فِي حَالَةِ الوقفِ عَلَى (مِصْرَ) وَ(الْقِطْرِ)؟",
+                        options: [
+                            "التَّفْخِيمَ فِي (مِصْرَ) وَالتَّرْقِيقَ فِي (الْقِطْرِ)",
+                            "التَّرْقِيقَ فِي الكَلِمَتَيْنِ",
+                            "التَّفْخِيمَ فِي الكَلِمَتَيْنِ",
+                            "التَّرْقِيقَ فِي (مِصْرَ) وَالتَّفْخِيمَ فِي (الْقِطْرِ)"
+                        ],
+                        correct: 0,
+                        hint: "مراعاة للوقف أصلها في الوصل: مصر مفتوحة (مفخمة) والقطر مكسورة (مرققة)."
+                    },
+                    {
+                        q: "فِي كَلِمَةِ (فِرْقٍ) حَالَةَ الوَصْلِ فِي (فِرْقٍ كَالطَّوْدِ)، حُكْمُ الرَّاءِ هُوَ:",
+                        options: ["جَوَازُ الوَجْهَيْنِ", "التَّفْخِيمُ قَوْلاً وَاحِداً", "التَّرْقِيقُ قَوْلاً وَاحِداً", "الإِخْفَاءُ"],
+                        correct: 0,
+                        hint: "لأن الراء ساكنة وقبلها مكسور وبعدها حرف استعلاء مكسور حالة الوصل."
+                    }
+                ]
+            },
+
+            {
+                id: 4,
+                title: "المَحْوَرُ الرَّابِعُ: لامُ اسْمِ الجَلالَةِ وَحُكْمُ الأَلِفِ (٤)",
+                badgeColor: "bg-amber-600",
+                icon: "fa-sun",
+                brief: "يَتَنَاوَلُ أحْكَامَ تَفْخِيمِ وَتَرْقِيقِ اللامِ فِي لَفْظِ الجَلالَةِ (اللَّه) وَقَاعِدَةَ تَبَعِيَّةِ الأَلِفِ لِمَا قَبْلَهَا.",
+                details: [
+                    {
+                        subtitle: "1. أحْكَامُ اللامِ فِي اسْمِ الجَلالَةِ (اللَّه)",
+                        content: `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                                <div class="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                                    <h5 class="font-extrabold text-amber-900 text-base mb-2">التَّفْخِيمُ (4 حَالاتٍ):</h5>
+                                    <ul class="list-disc list-inside space-y-1.5 text-slate-700 font-semibold">
+                                        <li>1. الِابْتِدَاءُ بِاسْمِ اللَّهِ: «اللهُ»</li>
+                                        <li>2. إِذَا تَقَدَّمَهَا فَتْحٌ: «قَالَ اللهُ»</li>
+                                        <li>3. إِذَا تَقَدَّمَهَا سَاكِنٌ بَعْدَ فَتْحٍ: «وَإِلَى اللهِ»</li>
+                                        <li>4. إِذَا تَقَدَّمَهَا ضَمٌّ أَوْ سَاكِنٌ بَعْدَ ضَمٍّ: «عَبْدُ اللهِ» ، «قَالُوا اللَّهُمَّ»</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                                    <h5 class="font-extrabold text-blue-900 text-base mb-2">التَّرْقِيقُ (3 حَالاتٍ):</h5>
+                                    <ul class="list-disc list-inside space-y-1.5 text-slate-700 font-semibold">
+                                        <li>1. إِذَا تَقَدَّمَهَا كَسْرٌ: «بِاللهِ»</li>
+                                        <li>2. إِذَا تَقَدَّمَهَا سَاكِنٌ بَعْدَ كَسْرٍ: «وَيُنَجِّي اللهُ»</li>
+                                        <li>3. إِذَا تَقَدَّمَهَا تَنـْوِينٌ: «قَوْماً اللهُ»</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "2. حُكْمُ الأَلِفِ مِنْ حَيْثُ التَّفْخِيمُ وَالتَّرْقِيقُ",
+                        content: `
+                            <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-xs sm:text-sm">
+                                <h5 class="font-extrabold text-emerald-900 text-base mb-1">💡 القَاعِدَةُ:</h5>
+                                <p class="text-slate-800 font-bold leading-relaxed">
+                                    تَكُونُ الأَلِفُ تَابِعَةً لِلْحَرْفِ الَّذِي قَبْلَهَا:
+                                </p>
+                                <ul class="list-disc list-inside mt-2 space-y-1 text-slate-700">
+                                    <li>فَإِذَا كَانَ الحَرْفُ الَّذِي قَبْلَهَا <strong>مُفَخَّماً</strong> تُفَخَّمُ الأَلِفُ، نَحْوُ: <strong class="text-emerald-800">«خَالِدِينَ» ، «يُرَاعُونَ»</strong>.</li>
+                                    <li>وَإِذَا كَانَ الحَرْفُ الَّذِي قَبْلَهَا <strong>مُرَقَّقاً</strong> تُرَقَّقُ الأَلِفُ، نَحْوُ: <strong class="text-emerald-800">«السَّمَاءِ» ، «الشِّتَاءِ»</strong>.</li>
+                                </ul>
+                            </div>
+                        `
+                    }
+                ],
+                questions: [
+                    {
+                        q: "حُكْمُ لامِ لَفْظِ الجَلالَةِ فِي قَوْلِهِ تَعَالَى (قَوْماً اللَّهُ) هُوَ:",
+                        options: ["التَّرْقِيقُ (لِتَقَدُّمِ التَّنْوِينِ)", "التَّفْخِيمُ", "الإِظْهَارُ", "جَوَازُ الوَجْهَيْنِ"],
+                        correct: 0,
+                        hint: "ترقق لام لفظ الجلالة إذا تقدمها تنوين."
+                    },
+                    {
+                        q: "فِي قَوْلِهِ تَعَالَى (عَبْدُ اللَّهِ)، تُفَخَّمُ لامُ اسْمِ الجَلالَةِ لِأَنَّهَا:",
+                        options: ["تَقَدَّمَهَا ضَمٌّ", "تَقَدَّمَهَا كَسْرٌ", "جَاءَتْ فِي أَوَّلِ الآيَةِ", "تَقَدَّمَهَا تَنـْوِينٌ"],
+                        correct: 0,
+                        hint: "إذا تقدم اسم الجلالة ضم تفخم اللام."
+                    },
+                    {
+                        q: "تُفَخَّمُ اللامُ فِي اسْمِ الجَلالَةِ فِي جَمِيعِ الحَالاتِ التَّالِيَةِ مَا عَدَا:",
+                        options: ["إِذَا تَقَدَّمَهَا كَسْرٌ (مِثْلُ: بِاللَّهِ)", "عِنْدَ الِابْتِدَاءِ بِهَا (اللهُ)", "إِذَا تَقَدَّمَهَا فَتْحٌ (قَالَ اللهُ)", "إِذَا تَقَدَّمَهَا سَاكِنٌ بَعْدَ ضَمٍّ (قَالُوا اللَّهُمَّ)"],
+                        correct: 0,
+                        hint: "إذا تقدمها كسر فإن اللام ترقق قولا واحداً."
+                    },
+                    {
+                        q: "الأَلِفُ فِي كَلِمَةِ (خَالِدِينَ) تُفَخَّمُ لِأَنَّهَا:",
+                        options: ["تَابِعَةٌ لِلْحَرْفِ الَّذِي قَبْلَهَا (الخَاءِ المـُفَخَّمِ)", "حَرْفُ اسْتِعْلاءٍ أِصْلِيّ", "مَكْسُورَةٌ", "مُشَدَّدَةٌ"],
+                        correct: 0,
+                        hint: "الألف تتبع الحرف الذي قبلها تفخيماً وترقيقاً."
+                    },
+                    {
+                        q: "حُكْمُ الأَلِفِ فِي كَلِمَةِ (السَّمَاءِ) هُوَ:",
+                        options: ["التَّرْقِيقُ (لِأَنَّ المِيمَ قَبْلَهَا حَرْفٌ مُرَقَّقٌ)", "التَّفْخِيمُ", "التَّفْخِيمُ فِي الوَصْلِ فَقَطْ", "الإِقْلابُ"],
+                        correct: 0,
+                        hint: "الميم حرف مرقق فالألف بعده ترقق قولا واحداً."
+                    }
+                ]
+            },
+
+            {
+                id: 5,
+                title: "المَحْوَرُ الخَامِسُ: شَجَرَةُ المـُدُودِ (الأَصْلِيُّ وَالفَرْعِيُّ) (٥)",
+                badgeColor: "bg-teal-600",
+                icon: "fa-sitemap",
+                brief: "يَشْمَلُ شَجَرَةَ الـمُدُودِ الكَامِلَةَ: الـمَدَّ الأَصْلِيَّ وَمُلْحَقَاتِهِ، وَالـمَدَّ الفَرْعِيَّ بِسَبَبِ الـهَمْزِ أَوْ السُّكُونِ.",
+                details: [
+                    {
+                        subtitle: "1. الـمَدُّ الأَصْلِيُّ (الطَّبِيعِيُّ) وَمُلْحَقَاتُهُ",
+                        content: `
+                            <div class="bg-teal-50 p-4 rounded-xl border border-teal-200 text-xs sm:text-sm space-y-2">
+                                <p><strong class="text-teal-900 text-base">الـمَدُّ الأَصْلِيُّ (الطَّبِيعِيُّ):</strong> مِقْدَارُهُ <strong>(حَرَكَتَانِ - 2)</strong>.</p>
+                                <p class="font-bold text-slate-800">يَلْحَقُ بِهِ 4 أَنْوَاعٍ (تُمَدُّ بِمِقْدَارِ حَرَكَتَيْنِ):</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                    <div class="bg-white p-2 rounded border border-teal-100"><strong>1. مد التَّمْكِينِ:</strong> «النَّبِيِّينَ»</div>
+                                    <div class="bg-white p-2 rounded border border-teal-100"><strong>2. مد البَدَلِ:</strong> «أُوتُوا»</div>
+                                    <div class="bg-white p-2 rounded border border-teal-100"><strong>3. مد العِوَضِ:</strong> «مَاءً = مَاءَا»</div>
+                                    <div class="bg-white p-2 rounded border border-teal-100"><strong>4. الـصِّلَةُ الصُّغْرَى:</strong> «وَأُمِّهِ وَأَبِيهِ»</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        subtitle: "2. الـمَدُّ الفَرْعِيُّ (سَبَبُهُ هَمْزٌ أَوْ سُكُونٌ)",
+                        content: `
+                            <div class="space-y-3 text-xs sm:text-sm">
+                                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200">
+                                    <h5 class="font-extrabold text-amber-900">أ) سَبَبُهُ هَمْزٌ (مِقْدَارُهُ: 4 - 5 حَرَكَاتٍ):</h5>
+                                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-700 font-semibold">
+                                        <li><strong>المـُتَّصِلُ:</strong> «السَّمَاءِ»</li>
+                                        <li><strong>المـُنْفَصِلُ:</strong> «بِمَا أَنْزَلَ»</li>
+                                        <li><strong>الصِّلَةُ الكُبْرَى:</strong> «مَالَهُ وَأَخْلَدَهُ»</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-purple-50 p-3.5 rounded-xl border border-purple-200">
+                                    <h5 class="font-extrabold text-purple-900">ب) سَبَبُهُ سُكُونٌ:</h5>
+                                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-700 font-semibold">
+                                        <li><strong>اللازِمُ (مِقْدَارُهُ 6 حَرَكَاتٍ وجوباً):</strong>
+                                            <ul class="pr-4 list-square text-xs text-slate-600">
+                                                <li>• كَلِمِيّ مِثَقَّلٌ: «الصَّاخَّةُ» ، «أَتُحَاجُّونِّي» | كَلِمِيّ مُخَفَّفٌ: «آلآنَ»</li>
+                                                <li>• حَرْفِيّ مِثَقَّلٌ: «طسم» | حَرْفِيّ مُخَفَّفٌ: «ق ، ن»</li>
+                                            </ul>
+                                        </li>
+                                        <li><strong>العَارِضُ لِلْسُّكُونِ (مِقْدَارُهُ: 2 ، 4 ، 6 حَرَكَاتٍ):</strong> «تَعْلَمُونَ»</li>
+                                        <li><strong>الـلِّينُ (مِقْدَارُهُ: 2 ، 4 ، 6 حَرَكَاتٍ):</strong> «خَوْف» ، «قُرَيْش»</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
+                questions: [
+                    {
+                        q: "أَيٌّ مِنْ أَنْوَاعِ المـُدُودِ التَّالِيَةِ يُعْتَبَرُ مَلْحَقاً بِالـمَدِّ الأَصْلِيِّ (الطَّبِيعِيِّ) وَيُمَدُّ بِمِقْدَارِ حَرَكَتَيْنِ؟",
+                        options: ["مَدُّ العِوَضِ وَمَدُّ التَّمْكِينِ", "الـمَدُّ المـُتَّصِلُ", "الـمَدُّ اللازِمُ الكَلِمِيُّ", "الـمَدُّ المـُنْفَصِلُ"],
+                        correct: 0,
+                        hint: "يلحق بالمد الأصلي: التمكين، البدل، العوض، والصلة الصغرى."
+                    },
+                    {
+                        q: "مَا هُوَ مِقْدَارُ مَدِّ (الـمَدِّ اللازِمِ) بِأَقْسَامِهِ الكَلِمِيَّةِ وَالحَرْفِيَّةِ؟",
+                        options: ["6 حَرَكَاتٍ وُجُوباً", "4 أَوْ 5 حَرَكَاتٍ", "حَرَكَتَانِ فَقَطْ", "2 أَوْ 4 أَوْ 6 حَرَكَاتٍ"],
+                        correct: 0,
+                        hint: "المد اللازم بجميع أقسامه يمد 6 حرَكات دائماً."
+                    },
+                    {
+                        q: "الـمَدُّ فِي كَلِمَةِ (الصَّاخَّةُ) يُصَنَّفُ عَلَى أَنَّهُ مَدٌّ:",
+                        options: ["لازِمٌ كَلِمِيٌّ مُثَقَّلٌ", "لازِمٌ كَلِمِيٌّ مُخَفَّفٌ", "مُتَّصِلٌ", "عَارِضٌ لِلْسُّكُونِ"],
+                        correct: 0,
+                        hint: "المد اللازم الكلمي المثقل يكون مجيئ حرف مشدد بعد حرف المد في كلمة."
+                    },
+                    {
+                        q: "مِقْدَارُ مَدِّ (الـمَدِّ الـمُنْفَصِلِ) وَ(المـُتَّصِلِ) عِنْدَ الإِمَامِ حَفْصٍ هُوَ:",
+                        options: ["4 أَوْ 5 حَرَكَاتٍ", "6 حَرَكَاتٍ", "حَرَكَتَانِ", "8 حَرَكَاتٍ"],
+                        correct: 0,
+                        hint: "المد المتصل والمنفصل يمدان 4 أو 5 حرَكات."
+                    },
+                    {
+                        q: "الـمَدُّ فِي كَلِمَتَيْ (خَوْف) وَ(قُرَيْش) عِنْدَ الوقفِ يُسَمَّى:",
+                        options: ["مَدَّ لِينٍ (مِقْدَارُهُ 2 ، 4 ، 6 حَرَكَاتٍ)", "مَدَّ عِوَضٍ", "مَدَّ صِلَةٍ كُبْرَى", "مَدَّ بَدَلٍ"],
+                        correct: 0,
+                        hint: "مد اللين يكون عند السكون العارض بعد ياء أو واو لين ساكنتين وقبلهما فتح."
+                    }
+                ]
+            }
+        ];
+
+        let currentAxisIdx = 0;
+        let currentQuestionIdx = 0;
+        let selectedOptionIdx = null;
+
+        window.onload = function() {
+            renderStudentLogTable();
+        };
+
+        function startLesson(e) {
+            e.preventDefault();
+            const name = document.getElementById('input-name').value.trim();
+            const id = document.getElementById('input-id').value.trim();
+
+            if (!name || !id) {
+                alert("يُرْجَى كِتَابَةُ الاِسْمِ الثُّلاثِيِّ وَالرَّقْمِ المَدْرَسِيِّ كَي تَبْدَأَ!");
+                return;
+            }
+
+            student.name = name;
+            student.id = id;
+            student.score = 0;
+
+            document.getElementById('bar-student-name').innerText = student.name;
+            document.getElementById('bar-student-id').innerText = student.id;
+            document.getElementById('bar-student-score').innerText = student.score;
+            document.getElementById('top-bar').classList.remove('hidden');
+            document.getElementById('nav-bar').classList.remove('hidden');
+
+            saveStudentToLog();
+            showSlide('slide-outcomes');
+            document.getElementById('current-step-title').innerText = "نَوَاتِجُ التَّعَلُّمِ";
+        }
+
+        function showSlide(slideId) {
+            const slides = ['slide-login', 'slide-outcomes', 'slide-warmup', 'slide-axis', 'slide-quiz', 'slide-certificate'];
+            slides.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === slideId) {
+                    el.classList.remove('hidden');
+                    el.classList.add('animate-fade-in');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextStep() {
+            if (student.currentStepIndex === 0) {
+                student.currentStepIndex = 1;
+                showSlide('slide-warmup');
+                document.getElementById('current-step-title').innerText = "تَهْيِئَةٌ وَتَمْهِيدٌ";
+            } else if (student.currentStepIndex === 1) {
+                student.currentStepIndex = 2;
+                currentAxisIdx = 0;
+                loadAxis(currentAxisIdx);
+            }
+        }
+
+        function goPreviousStep() {
+            const currentSlide = document.querySelector('section:not(.hidden)').id;
+
+            if (currentSlide === 'slide-outcomes') {
+                showSlide('slide-login');
+                document.getElementById('top-bar').classList.add('hidden');
+                document.getElementById('nav-bar').classList.add('hidden');
+                student.currentStepIndex = 0;
+            } else if (currentSlide === 'slide-warmup') {
+                showSlide('slide-outcomes');
+                document.getElementById('current-step-title').innerText = "نَوَاتِجُ التَّعَلُّمِ";
+                student.currentStepIndex = 0;
+            } else if (currentSlide === 'slide-axis') {
+                if (currentAxisIdx > 0) {
+                    currentAxisIdx--;
+                    loadAxis(currentAxisIdx);
+                } else {
+                    showSlide('slide-warmup');
+                    document.getElementById('current-step-title').innerText = "تَهْيِئَةٌ وَتَمْهِيدٌ";
+                    student.currentStepIndex = 1;
+                }
+            } else if (currentSlide === 'slide-quiz') {
+                loadAxis(currentAxisIdx);
+            } else if (currentSlide === 'slide-certificate') {
+                loadAxis(AXES_DATA.length - 1);
+            }
+        }
+
+        function loadAxis(idx) {
+            currentAxisIdx = idx;
+            const axis = AXES_DATA[idx];
+            showSlide('slide-axis');
+
+            document.getElementById('current-step-title').innerText = axis.title;
+            document.getElementById('axis-badge').innerText = `المَحْوَرُ ${idx + 1} مِنْ ${AXES_DATA.length}`;
+            document.getElementById('axis-title').innerText = axis.title;
+            document.getElementById('axis-brief').innerText = axis.brief;
+
+            const banner = document.getElementById('axis-banner');
+            banner.className = `rounded-3xl p-6 sm:p-8 text-white shadow-xl mb-6 transition-all ${axis.badgeColor}`;
+
+            document.getElementById('axis-icon').className = `fas ${axis.icon}`;
+
+            const contentContainer = document.getElementById('axis-content');
+            contentContainer.innerHTML = axis.details.map(item => `
+                <div class="border-b border-slate-100 pb-4 last:border-none">
+                    <h4 class="text-lg font-extrabold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-chevron-left text-emerald-500 text-sm"></i>
+                        <span>${item.subtitle}</span>
+                    </h4>
+                    <div class="text-slate-600 text-base leading-relaxed">
+                        ${item.content}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startAxisQuiz() {
+            currentQuestionIdx = 0;
+            showSlide('slide-quiz');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const axis = AXES_DATA[currentAxisIdx];
+            const qData = axis.questions[currentQuestionIdx];
+
+            document.getElementById('quiz-axis-tag').innerText = axis.title;
+            document.getElementById('quiz-question-num').innerText = `السُّؤَالُ ${currentQuestionIdx + 1} مِنْ ${axis.questions.length}`;
+            
+            const fillPercent = ((currentQuestionIdx + 1) / axis.questions.length) * 100;
+            document.getElementById('quiz-progress-fill').style.width = `${fillPercent}%`;
+
+            document.getElementById('quiz-question-text').innerText = qData.q;
+
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+            
+            document.getElementById('quiz-feedback').className = "hidden rounded-2xl p-4 text-sm font-semibold transition-all";
+            document.getElementById('btn-next-question').classList.add('hidden');
+
+            selectedOptionIdx = null;
+
+            qData.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-4 rounded-xl border-2 border-slate-200 hover:border-emerald-500 bg-white hover:bg-emerald-50/50 font-bold text-slate-700 text-right transition flex items-center justify-between text-base shadow-sm";
+                btn.onclick = () => selectOption(index, btn);
+                btn.innerHTML = `
+                    <span class="leading-normal">${optText}</span>
+                    <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center text-xs text-transparent check-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(optIndex, btnElement) {
+            const axis = AXES_DATA[currentAxisIdx];
+            const qData = axis.questions[currentQuestionIdx];
+
+            const allOpts = document.querySelectorAll('#quiz-options-container button');
+            allOpts.forEach(b => {
+                b.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white font-bold text-slate-700 text-right transition flex items-center justify-between text-base opacity-60 pointer-events-none";
+            });
+
+            const feedbackBox = document.getElementById('quiz-feedback');
+            feedbackBox.classList.remove('hidden');
+
+            if (optIndex === qData.correct) {
+                AudioFX.playCorrect();
+                btnElement.className = "w-full p-4 rounded-xl border-2 border-emerald-500 bg-emerald-100 font-bold text-emerald-900 text-right flex items-center justify-between text-base shadow";
+                btnElement.querySelector('.check-icon').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs";
+
+                student.score += 4;
+                document.getElementById('bar-student-score').innerText = student.score;
+                saveStudentToLog();
+
+                feedbackBox.className = "rounded-2xl p-4 text-sm font-bold bg-emerald-100 border border-emerald-300 text-emerald-900 mt-4 flex items-start gap-3 animate-fade-in";
+                feedbackBox.innerHTML = `
+                    <i class="fas fa-check-circle text-emerald-600 text-2xl mt-0.5"></i>
+                    <div>
+                        <div class="text-base font-extrabold">إِجَابَةٌ صَحِيحَةٌ! أَحْسَنْتَ صَنِيعاً 🎉</div>
+                        <div class="text-xs text-emerald-700 mt-1">${qData.hint}</div>
+                    </div>
+                `;
+                document.getElementById('btn-next-question').classList.remove('hidden');
+            } else {
+                AudioFX.playWrong();
+                btnElement.className = "w-full p-4 rounded-xl border-2 border-red-500 bg-red-100 font-bold text-red-900 text-right flex items-center justify-between text-base shadow";
+
+                feedbackBox.className = "rounded-2xl p-4 text-sm font-bold bg-amber-100 border border-amber-300 text-amber-900 mt-4 flex items-start gap-3 animate-fade-in";
+                feedbackBox.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-amber-600 text-2xl mt-0.5"></i>
+                    <div>
+                        <div class="text-base font-extrabold">إِجَابَةٌ غَيْرُ صَحِيحَةٍ! خُذْ فُرْصَةً أُخْرَى 💡</div>
+                        <div class="text-xs text-amber-800 mt-1"><strong>تَلْمِيحٌ وَشَرْحٌ:</strong> ${qData.hint}</div>
+                        <button onclick="retryQuestion()" class="mt-3 px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold rounded-lg shadow">حَاوِلْ مَرَّةً أُخْرَى</button>
+                    </div>
+                `;
+            }
+        }
+
+        function retryQuestion() {
+            loadQuestion();
+        }
+
+        function submitNextQuestion() {
+            const axis = AXES_DATA[currentAxisIdx];
+            if (currentQuestionIdx < axis.questions.length - 1) {
+                currentQuestionIdx++;
+                loadQuestion();
+            } else {
+                if (currentAxisIdx < AXES_DATA.length - 1) {
+                    currentAxisIdx++;
+                    loadAxis(currentAxisIdx);
+                } else {
+                    showCertificate();
+                }
+            }
+        }
+
+        function showCertificate() {
+            showSlide('slide-certificate');
+            document.getElementById('current-step-title').innerText = "الشَّهَادَةُ النِّهَائِيَّةُ";
+
+            document.getElementById('cert-student-name').innerText = student.name;
+            document.getElementById('cert-student-id').innerText = student.id;
+
+            const percentage = Math.min(100, Math.round((student.score / 100) * 100));
+            document.getElementById('cert-score-percent').innerText = `${percentage}%`;
+
+            let feedbackMsg = "";
+            if (percentage >= 90) {
+                feedbackMsg = "مُـمْتَازٌ جِدّاً! حَقَّقْتَ أَعْلَى الدَّرَجَاتِ فِي هَذِهِ الرِّحْلَةِ الإِيمَانِيَّةِ وَأَتْقَنْتَ أحْكَامَ التَّجْوِيدِ الـمُعْتَمَدَةِ!";
+            } else if (percentage >= 75) {
+                feedbackMsg = "جَيِّدٌ جِدّاً! أَدَاءٌ رَائِعٌ وَمُتَمَيِّزٌ فِي تَجْوِيدِ كَلامِ اللَّهِ تَعَالَى!";
+            } else {
+                feedbackMsg = "أَحْسَنْتَ المـُحَاوَلَةَ! نَنْصَحُكَ بِمُرَاجَعَةِ المَحَاوِرِ مَرَّةً أُخْرَى لِتَقْوِيَةِ مَهَارَاتِكَ.";
+            }
+            document.getElementById('cert-feedback-text').innerText = feedbackMsg;
+
+            saveStudentToLog();
+        }
+
+        function showWordModal(title, desc) {
+            document.getElementById('modal-word-title').innerText = title;
+            document.getElementById('modal-word-desc').innerText = desc;
+            document.getElementById('modal-word').classList.remove('hidden');
+        }
+
+        function closeWordModal() {
+            document.getElementById('modal-word').classList.add('hidden');
+        }
+
+        function toggleTeacherPanel() {
+            const modal = document.getElementById('modal-teacher');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                renderStudentLogTable();
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function saveStudentToLog() {
+            if (!student.name || !student.id) return;
+            const existingIdx = studentsLog.findIndex(s => s.id === student.id);
+            const now = new Date().toLocaleString('ar-EG');
+
+            const record = {
+                name: student.name,
+                id: student.id,
+                score: student.score,
+                percentage: Math.min(100, Math.round((student.score / 100) * 100)) + '%',
+                date: now
+            };
+
+            if (existingIdx >= 0) {
+                studentsLog[existingIdx] = record;
+            } else {
+                if (studentsLog.length >= 150) {
+                    studentsLog.shift();
+                }
+                studentsLog.push(record);
+            }
+
+            localStorage.setItem('tajweed_students_log', JSON.stringify(studentsLog));
+            renderStudentLogTable();
+        }
+
+        function renderStudentLogTable() {
+            const tbody = document.getElementById('dash-table-body');
+            document.getElementById('dash-count').innerText = studentsLog.length;
+
+            if (studentsLog.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 font-bold">لا يُوجَدُ طُلاَّبٌ مُسَجَّلُونَ حَتَّى الآن.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = studentsLog.map((st, i) => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-slate-400">${i + 1}</td>
+                    <td class="p-3 font-bold text-slate-800">${st.name}</td>
+                    <td class="p-3 font-mono text-amber-600">${st.id}</td>
+                    <td class="p-3 font-extrabold text-emerald-700">${st.score}</td>
+                    <td class="p-3 font-bold text-blue-600">${st.percentage}</td>
+                    <td class="p-3 text-xs text-slate-400">${st.date}</td>
+                </tr>
+            `).join('');
+        }
+
+        function exportToExcel() {
+            if (studentsLog.length === 0) {
+                alert("لا يُوجَدُ بَيَانَاتٌ لِتَصْدِيرِهَا!");
+                return;
+            }
+
+            const data = studentsLog.map((st, idx) => ({
+                "م": idx + 1,
+                "اسم الطالب": st.name,
+                "الرقم المدرسي ID": st.id,
+                "النقاط": st.score,
+                "النسبة المئوية": st.percentage,
+                "تاريخ المشاركة": st.date
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "سجل الطلاب");
+            XLSX.writeFile(wb, "سجل_طلاب_درس_أحكام_التجويد.xlsx");
+        }
+    </script>
+</body>
+</html>
